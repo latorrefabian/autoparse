@@ -16,7 +16,7 @@ def str_to_bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
-def autoparse():
+def autoparse(verbose=False):
     def autoparse_(fn):
         signature = inspect.signature(fn)
         docs = doc_parse(fn.__doc__)
@@ -30,14 +30,21 @@ def autoparse():
             else:
                 type = param.annotation
 
+            if name in param_desc.keys():
+                help = param_desc[name]
+            else:
+                help = None
+
             parser.add_argument(
                         '--' + name, type=type,
-                        required=required, help=param_desc[name])
+                        required=required, help=help)
 
             if not required:
                 parser.set_defaults(**{name: param.default})
 
         args = parser.parse_args()
+        if verbose:
+            print('Running "' + fn.__name__ + '" with parameters ' + str(vars(args)))
         
         def fn_():
             return fn(**vars(args))

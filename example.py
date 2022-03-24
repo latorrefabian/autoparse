@@ -1,7 +1,7 @@
 from autoparse import autoparse
 
 
-@autoparse()
+@autoparse(verbose=True)
 def example(a: str, b: int, c: float=1.0, d: bool=True) -> float:
     """
     Function signature with type annotations and docstring
