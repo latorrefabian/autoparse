@@ -2,9 +2,17 @@ import inspect
 import argparse
 
 from docstring_parser import parse as doc_parse
+from typing import Callable
 
 
-def str_to_bool(v):
+def str_to_bool(v: str) -> bool:
+    """
+    Transform a string to a boolean value
+
+    :param v: string to be transformed
+    
+    :return: boolean value according to the meaning of the parameter v
+    """
     if isinstance(v, bool):
         return v
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -15,39 +23,46 @@ def str_to_bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
-def autoparse(verbose=False):
-    def autoparse_(fn):
-        signature = inspect.signature(fn)
-        docs = doc_parse(fn.__doc__)
-        param_desc = {p.arg_name: p.description for p in docs.params}
-        parser = argparse.ArgumentParser(docs.short_description)
-        for name, param in signature.parameters.items():
-            required = param.default is inspect._empty
+def autoparse(fn: Callable, verbose: bool=False) -> dict:
+    """
+    Parse parameters from the command line, according to the signature and
+    docstring of a function
 
-            if param.annotation is bool:
-                type = str_to_bool
-            else:
-                type = param.annotation
+    :param fn: callable with type hints and docstring
+    :param verbose: if True, will print the arguments parsed
 
-            if name in param_desc.keys():
-                help = param_desc[name]
-            else:
-                help = None
+    :return: dictionary containing the parameter names and values
+    """
+    signature = inspect.signature(fn)
+    docs = doc_parse(fn.__doc__)
+    param_desc = {p.arg_name: p.description for p in docs.params}
+    parser = argparse.ArgumentParser(docs.short_description)
 
-            parser.add_argument(
-                        '--' + name, type=type,
-                        required=required, help=help)
+    for name, param in signature.parameters.items():
+        required = param.default is inspect._empty
 
-            if not required:
-                parser.set_defaults(**{name: param.default})
+        if param.annotation is bool:
+            type = str_to_bool
+        else:
+            type = param.annotation
 
-        args = parser.parse_args()
-        if verbose:
-            print('Running "' + fn.__name__ + '" with parameters ' + str(vars(args)))
-        
-        def fn_():
-            return fn(**vars(args))
+        if name in param_desc.keys():
+            help = param_desc[name]
+        else:
+            help = None
 
-        return fn_
+        parser.add_argument(
+                    '--' + name, type=type,
+                    required=required, help=help)
 
-    return autoparse_
+        if not required:
+            parser.set_defaults(**{name: param.default})
+
+    args = parser.parse_args()
+
+    if verbose:
+        print('Running "' + fn.__name__ + '" with parameters:')
+        for key, value in vars(args).items():
+            print('    -', str(key) + ':', value)
+
+    return vars(args)

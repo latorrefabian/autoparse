@@ -1,7 +1,6 @@
 from autoparse import autoparse
 
 
-@autoparse(verbose=True)
 def example(a: str, b: int, c: float=1.0, d: bool=True) -> float:
     """
     Function signature with type annotations and docstring
@@ -17,4 +16,5 @@ def example(a: str, b: int, c: float=1.0, d: bool=True) -> float:
 
 
 if __name__ == '__main__':
-    example()
+    args = autoparse(example, verbose=True)
+    example(**args)
