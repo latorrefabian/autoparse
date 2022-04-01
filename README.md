@@ -9,7 +9,6 @@ as follows:
 # example.py
 from autoparse import autoparse
 
-@autoparse(verbose=True)
 def example(a: str, b: int, c: float=1.0, d: bool=True) -> float:
     """
     Function signature with type annotations and docstring
@@ -23,7 +22,8 @@ def example(a: str, b: int, c: float=1.0, d: bool=True) -> float:
     return 2 * c
 
 if __name__ == '__main__':
-    example()
+    args = autoparse(example, verbose=True)
+    example(**args)
 ```
 Now you can simply execute your python script and pass parameters directly on the command line
 ```bash
